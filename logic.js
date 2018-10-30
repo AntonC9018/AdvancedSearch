@@ -81,11 +81,23 @@ function jump(cl, n) {
     }
     // change color of highlighted element
     let el = all[jumpMemory[cl]];
-    el.scrollIntoView();
+    if (!$(el).isInViewport()) {
+      el.scrollIntoView();
+    }
     el.style.backgroundColor = colors[cl][1];
     jumpRunning = false;
   }
 }
+
+$.fn.isInViewport = function() {
+  var elementTop = $(this).offset().top;
+  var elementBottom = elementTop + $(this).outerHeight();
+
+  var viewportTop = $(window).scrollTop();
+  var viewportBottom = viewportTop + $(window).height();
+
+  return elementBottom > viewportTop && elementTop < viewportBottom;
+};
 
 $(".inputs").html(`
 3Blue1Brown
