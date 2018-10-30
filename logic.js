@@ -1,235 +1,153 @@
 var prevText = '';
-function find(text) {
-  text.trim();
-  if (text == prevText) return;
+var findRunning = false;
+var jumpRunning = false;
+
+var colors = {
+  search: ["yellow", "orange"]
+}
+// find specific text and highlight it
+function find(text, cl) {
+  // no need to highlight as they are already
+  if (text === prevText) return;
+  // not intervene with "jump" process
+  if (jumpRunning) return;
+
+  // inform "jump" that it has to wait
+  findRunning = true;
+
+  let color = colors[cl][0];
   let input = $(".inputs").html();
-  let regex = /<span class="highlight".+<\/span>/g;
-  input = input.replace(regex, prevText);
-  if (text.length == 0) return;
-  regex = new RegExp(text, 'g');
-  input = input.replace(regex, `<span class="highlight">${text}</span>`);
-  $(".inputs").html(input);
-  $(".highlight").css("background-color", "yellow");
-  prevText = text;
-}
 
-$(".inputs").html(`Stack Overflow
+  // find highlighted elements
+  let regtext = '(?:<span class="' + cl +
+    '" style="background-color: (?:(?:' + color +
+    ')|(?:' + colors[cl][1] + '));">' + prevText +
+    '<\/span>)';
+  let regex = new RegExp(regtext, 'g');
+  // remove highlighting spans
+  let result = input.replace(regex, prevText);
 
-Search…
-
-
-1
-●3
-By using our site, you acknowledge that you have read and understand our Cookie Policy, Privacy Policy, and our Terms of Service.
-
-Home
-PUBLIC
-Stack Overflow
-Tags
-Users
-Jobs
-Teams
-Q&A for work
-Learn More
-
-How to get the position of a typed letter in a textarea with Javascript?
-Ask Question
-up vote
-1
-down vote
-favorite
-I am creating a dropdown while typing in a textarea. How can I get the position of the typed letter given a keyup event?
-
-javascript jquery
-shareedit
-asked May 26 '15 at 1:46
-
-Some Guy
-2,56473356
-github.com/component/textarea-caret-position – Amadan May 26 '15 at 1:53
-Can you elaborate on what you mean by position? Like the x and y coordinates of the character itself? Or the index of the character in the string in the textarea? – Danny Delott May 26 '15 at 2:12
-Sorry, I meant the x and y coordinates on the screen, so I can position the dropdown in the right place. – Some Guy May 26 '15 at 5:34
-That's tricky! I suggest you to use the attribute contenteditable instead of using an textarea. Using a div with contentediable you can wrap the last typed character into a span and get its offsetTop and offsetLeft to place your dropdown – João Mosmann May 26 '15 at 20:47
-add a comment
-2 Answers
-active oldest votes
-Не нашли ответ? Задайте вопрос на Stack Overflow на русском.
-
-✕
-up vote
-1
-down vote
-Greg's answer seems to work. But if you want a more simpler way to get it, you can access the selectionStart property of the textarea.
-
-For example
-
-var myTextArea = $("#mytextarea");
-
-myTextArea.keyup(function () {
-
- console.log("The last typed character is at: ", myTextArea.get(0).selectionStart - 1);
-
-});
-http://jsfiddle.net/wasjdhtu/
-
-shareedit
-edited May 26 '15 at 20:38
-answered May 26 '15 at 2:37
-
-João Mosmann
-2,5131425
-add a comment
-
-up vote
-1
-down vote
-var oldValue = '';
-var keyup = function() {
-  var value = document.getElementById('myTextArea').value;
-  for(var i=0; i<value.length; i++) {
-      if(i >= oldValue.length) {
-          // letter typed at end
-          oldValue = value;
-          return; // not really necessary since we should be at the end of the loop anyway
-      } else if(value.charAt(i) !== oldValue.charAt(i)) {
-          // letter typed at i
-          oldValue = value;
-          return; // no need to keep searching
-      }
+  // highlight letter/word unless it's an empty string
+  if (text.length !== 0) {
+    let reg = new RegExp(text, 'g');
+    result = result.replace(reg, `<span class="${cl}" style="background-color: ${color};">${text}</span>`);
+    console.log("Bringing it back");
+    // clean up jump memory
+    jumpMemory[cl] = -1;
   }
-  // no new letters typed
+  // register text change
+  prevText = text;
+  // reset input text
+  $(".inputs").html(result);
+
+  // inform "jump" that process has finished
+  findRunning = false;
 }
-shareedit
-answered May 26 '15 at 2:22
 
-Greg
-79821332
-Sorry, I meant the x and y coordinates on the screen, so I can position the dropdown in the right place. – Some Guy May 26 '15 at 5:34
-Ah that's tricky. You'd need the pixel width of each character in the font you're using, and you'd likely run into problems across different browsers. I'd seriously consider doing something simpler. Most people just align the dropdown with the input box. – Greg May 26 '15 at 12:08
-You could also try using something like stackoverflow.com/questions/118241/… – Greg May 26 '15 at 12:10
-add a comment
-Your Answer
-Links Images Styling/Headers Lists Blockquotes Code HTML advanced help »
+var jumpMemory = {
+}
 
+// jump to the next or to some specific word
+function jump(cl, n) {
+  jumpRunning = true
+  // hold on until "find" is done
+  if (findRunning) {
+    setTimeout(function() {
+      jump(cl);
+    }, 20);
+  } else {
+    // get highlighted spans to choose from
+    let all = $(`.${cl}`).not(".filter,.tool");
+    // make new memory if it doesn't exist
+    if (jumpMemory[cl] === undefined) {
+      jumpMemory[cl] = 0;
+      console.log("NOT DEFINED");
+      console.log(cl);
+    } else {
+      // unhighlight previously highlighted elements
+      if (jumpMemory[cl] > -1) {
+        console.log(jumpMemory[cl]);
+        all[jumpMemory[cl]].style.backgroundColor = colors[cl][0];
+      }
+      // go to the next item
+      jumpMemory[cl]++;
+      console.log(jumpMemory);
+      if (jumpMemory[cl] >= all.length) {
+        jumpMemory[cl] = 0;
+      }
+    }
+    if (n) {
+      jumpMemory[cl] = n;
+    }
+    // change color of highlighted element
+    let el = all[jumpMemory[cl]];
+    el.scrollIntoView();
+    el.style.backgroundColor = colors[cl][1];
+    jumpRunning = false;
+  }
+}
 
-Post Your Answer
-Not the answer you're looking for? Browse other questions tagged javascript jquery or ask your own question.
-asked
+$(".inputs").html(`
+3Blue1Brown
+Animated math
+Home  Videos  Store  Math Poetry  FAQ/Contact
+The "Meta-formula" for 1n+2n+3n+...+xn
+May 13, 2018
+You’ve probably seen formulas such 1+2+3+…+x=x22+x2, 12+22+32+…+x2=x33+x22+x6, and so on before, and wondered where these come from, and if the same thing can be done for sums of powers of any degree.
 
-3 years, 5 months ago
+Well, the answer (er, to the second question) is a resounding YES! Here is a general technique that will quite readily, quite easily give you the formula for the sum of consecutive values of any polynomial, as another polynomial. Indeed, here is a “meta-formula” for the desired formula.
 
-viewed
+Actually, I will explain this same underlying idea twice, in somewhat different ways. Once a little less abstractly, and once a little more abstractly. You may read whichever of these tickles your fancy best; whichever gives you the clearest understanding.
 
-625 times
+The less abstract presentation:
 
-active
+Suppose you already have a nice formula for R(x)=1n+2n+3n+…+xn (in other words, R(0)=0 and R(x)−R(x−1)=xn). How can we find a similar formula for (n+1)th powers instead of nth powers?
 
-3 years, 5 months ago
+Well, xn+1 is what we get if we integrate xn (with an initial value of 0) and multiply by n+1. And if we do this to R, so that Q′=(n+1)R, this Q will ALMOST give us exactly what we need: we will then have that the derivative of Q(x)−Q(x−1) is (n+1)(R(x)−R(x−1))=(n+1)xn, which is the derivative of xn+1; it follows that Q(x)−Q(x−1) and xn+1 differ by at most a constant.
 
-FEATURED ON META
-Should we burninate the [design] tag?
-Happy 10th anniversary Stack Overflow! Commence … au festival!
-HOT META POSTS
-33 Comment with link to my library removed
-10 Self-answered question where the problem came from a framework; should I put…
-Work from anywhere
-Front-End Design Engineer
-ElasticNo office location
-REMOTE
-javascripttypescript
-Software Engineer - San Francisco OR Remote - USA
-HelloSignSan Francisco, CA
-$125K - $200KREMOTE
-securityphp
-Front End Javascript Engineer (React/Redux)
-ClevertechNo office location
-REMOTE
-javascriptsql
-Node.js Developer (Remote)
-X-TeamNo office location
-REMOTE
-javascriptnode.js
-Work remotely - from home or wherever you choose.
+But we want them to match exactly! So to cancel out this constant, we can add an extra linear term to Q; as we add cx to Q, we end up adding c to Q(x)−Q(x−1), and so by using the appropriate c, we can get the exact equality we desire.
 
-Browse remote jobs
-Linked
-381
-Calculate text width with JavaScript
-Related
-7654
-How do JavaScript closures work?
-5106
-How do I remove a property from a JavaScript object?
-3463
-How do you get a timestamp in JavaScript?
-2070
-How to get the children of the $(this) selector?
-4304
-How do I include a JavaScript file in another JavaScript file?
-3094
-How do I make the first letter of a string uppercase in JavaScript?
-2582
-Get the current URL with JavaScript?
-1428
-Get selected value in dropdown list using JavaScript?
-7435
-How to check whether a string contains a substring in JavaScript?
-6448
-How do I remove a particular element from an array in JavaScript?
-Hot Network Questions
-The numbers, Mason, what do they mean?
-Schedule the last day of every month
-The first McDonald's restaurant on Mars
-How to get three nested enumerations in LaTeX?
-Why does Unity use reflection to get the update method?
-Group of matrices form a manifold or euclidean space
-Can I eat the rabbits my cat catches?
-How do services with high uptime apply patches without rebooting?
-Why doesn't current pass through a resistance if there is another path without resistance?
-How should I fry onions without burning them?
-After salary negotiations, Offer is rejected, But now HR is contacting again for more negotiations
-Do you need to have a visa or visa free passport for every port of call when departing on a Carribean cruise?
-Why don’t we use the term “scale signature”, rather than “key signature”?
-How can you dispute a Chinese restaurant's charge practically, in Canada?
-Use custom image icons in ArrayPlot?
-Physical effort in outputting 5V 1–2A?
-Limitation on external system calling Salesforce
-How can the scp foundation retain it's secrecy in a technologically changing world?
-Inactivate all occurrences of a symbol
-I am in a EU country where it says on the socket 16 A / 250 volt. Can I charge my laptop which takes 100-240 volt / ~1 A?
-more hot questions
-question feed
-STACK OVERFLOW
-Questions
-Jobs
-Developer Jobs Directory
-Salary Calculator
-Help
-Mobile
-Disable Responsiveness
-PRODUCTS
-Teams
-Talent
-Engagement
-Enterprise
-COMPANY
-About
-Press
-Work Here
-Legal
-Privacy Policy
-Contact Us
-STACK EXCHANGE
-NETWORK
-Technology
-Life / Arts
-Culture / Recreation
-Science
-Other
-Blog
-Facebook
-Twitter
-LinkedIn
-site design / logo © 2018 Stack Exchange Inc; user contributions licensed under cc by-sa 3.0 with attribution required. rev 2018.10.29.31977
+So that’s it, then. To get a formula for 1n+1+2n+1+3n+1+…+xn+1, we take a formula for 1n+2n+3n+…+xn, integrate it (with an initial value of 0) and multiply by n+1, then add cx where the constant c is chosen to ensure that we get the right values.
 
-`)
+Thus, since we know that the formula for the sum of the first x many 0th powers 1+1+1+… is x , we find that the formula to sum the first x many 1st powers 1+2+3+…+x is x22+cx. What should we choose c to be? We should choose it to give a total of 1 when x=1; thus. c=12, and our formula when n=1 is x22+x2.
+
+Next, to get the formula for 12+22+32+…+x2, we integrate, multiply by 2, and add an unknown linear term, to get x33+x22+cx. Again, we should choose c so that the total comes out to 1 when x=1; thus, c now must be 16.
+
+Next, to get the formula for 13+23+33+…+x3, we do this all again, integrating, multiplying by 3, and adding an unknown linear term, to get x44+x32+x24+cx. In this case, to get the total to come out to 1 when x=1, we take c=0.
+
+And so on and so on; continuing in this way, we get the formulas for any degree we like.
+
+The more abstract presentation:
+
+Consider the linear “forward difference” operator which sends the polynomial P(x) to the polynomial P(x+1)−P(x). Call this operator Δ. Given a polynomial P, our goal is to find some polynomial Q such that ΔQ=P. Then Q(a)−Q(b) will be P(b)+P(b+1)+P(b+2)+…+P(a−1), which will allow us to easily solve any problem of this sort. (We could just as well think about “backward differences” or any such thing, but my own idiosyncratic preference is to have to keep track of less minus signs…)
+
+But how do we find such a Q, given P?
+
+Well, let’s consider two other linear operators of note on polynomials, that are closely related to this difference operator. First of all, there’s “differentiation” (in the sense of taking the derivative), whose name already belies it closeness; this is the familiar operator from calculus which sends xn to nxn−1. We’ll call this operator δ. Secondly, there’s “integration” in the sense which sends each xn to xn+1n+1. We’ll call this operator ∫. Note that integrating followed by differentiating is the same as doing nothing at all (i.e., δ∫P=P).
+
+Let’s make more explicit the sense in which differentiation and forward difference are related. In particular, let’s note that we have, by Taylor expansion, that P(x+1)=P(x)+δ1P(x)1!+δ2P(x)2!+δ3P(x)3!+…=eδP(x). That is ΔP(x)=P(x+1)−P(x)=(eδ−1)P(x), which is to say, Δ=eδ−1. Conversely, we must have δ=ln(1+Δ), which by Taylor series expansion again, comes out to Δ−Δ22+Δ33−Δ44+….
+
+(For what it’s worth, though these are phrased as infinite series here, when applied to any particular polynomial, only finitely many terms are nonzero, as δ or Δ applied more than n times to a polynomial of degree n results in zero. So there are no convergence issues which can arise, and all the results which we know to hold for Taylor series as abstract formal objects (e.g., that ex−1 and ln(1+x) act as inverse functions) will necessarily work just as well for these series expansions in terms of our operators as applied to particular polynomials)
+
+Let’s see how this helps us with our goal. We wanted to find a Q such that ΔQ=P. But we can rewrite this as ΔQ=δ∫P, which is to say, ΔQ=(Δ−Δ22+Δ33−Δ44+…)∫P.
+
+Now it’s easy enough to solve. Factoring a Δ out, we see that it suffices to take Q=(1−Δ2+Δ23−Δ34+…)∫P=ln(1+Δ)Δ∫P. And as noted above, this is a finitary calculation for any particular P.
+
+Actually, because δn is easier to compute for polynomials in standard representation than Δn (since δ takes monomials to monomials), it is often more convenient to rewrite ln(1+Δ)Δ as δeδ−1=1−δ2+δ212−δ4720+…. The Taylor series expansion here, as for any such symbolic expression, can be evaluated to any desired length by straightforward calculus, although there are cleverer ways as well. [The coefficients so produced happen to have been studied in their own right, in the theory of the closely related “Bernoulli numbers”, in case you care to read up more on these.]
+
+So we have that Q=δeδ−1∫P=(1−δ2+δ212−δ4720+…)∫P =(∫−12+δ12−δ3720+…)P. And, remember, we can use this to calculate P(b)+P(b+1)+P(b+2)+…+P(a−1) as Q(a)−Q(b).
+
+This completes our general technique. Let’s apply it to, for example, the particular question of a formula for 12+22+32+…+x2.
+
+Suppose P(x)=x2. Applying (∫−12+δ12−δ3720+…) to this, we get x33−x22+x6+0+0+0+….
+
+Taking this to be Q(x), we can now compute 12+22+32+…+x2 as Q(x+1)−Q(1). Eh, it’ll be slightly simpler in the terms we’ve put this in to think of this as 02+12+22+…+(x−1)2+x2=Q(x)−Q(0)+x2, which is x33+x22+x6. Ta-da! This is our final formula.
+
+But the great value of the discussion in this post is that we do not need to apply new cleverness to solving this type of problem again for each new polynomial or degree of powers to be summed. We can mechanically produce the answers for each, simply applying δeδ−1∫=(∫−12+δ12−δ3720+…) to the given polynomial.
+
+This technique is general enough that it even works for some functions which aren’t polynomials, producing answers as convergent infinite series, which then can be used to interpolate/extrapolate the corresponding “sum consecutive values” function to new contexts beyond where this sum would ordinarily be interpretable. For example, these kinds of ideas can be used to generalize the factorial to non-integer arguments (by generalizing the logarithmic factorial, which is a sum of consecutive logarithms; of course, we’ve seen already how to generalize the factorial anyway), and to extend the Riemann and Hurwitz zeta functions to arbitrary inputs (as with every topic I mention in passing, I promise I will write more on this in a later post...). It’s a very valuable idea to be aware of.
+
+← The Fundamental Theorem of TelegraphyElementary Prime Counting →
+Comments (0) Newest First  Subscribe via e-mail
+
+Preview POST COMMENT…`);
