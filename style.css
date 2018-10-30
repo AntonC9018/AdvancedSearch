@@ -1,0 +1,85 @@
+.bt.filters {
+  padding: 5px;
+  padding-right:3px;
+  background-color: rgb(236, 161, 61);
+  width: 100px;
+  border: 1px solid black;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-gap:
+  /* position: relative;
+  top: 15px; */
+}
+.bt.filters .text {
+  padding-right: 4px;
+}
+.bt.filters:hover {
+  background-color:rgb(232, 162, 204);
+}
+textarea {
+  height:500px;
+}
+.arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid black;
+
+    -webkit-transition: -webkit-transform .8s ease-in-out;
+    -ms-transition: -ms-transform .8s ease-in-out;
+    transition: transform .5s ease-in-out;
+}
+.rotate {
+    -webkit-transform: rotate(180deg);
+       -moz-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+         -o-transform: rotate(180deg);
+            transform: rotate(180deg);
+               /* IE6–IE9 */
+               filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.9914448613738104, M12=-0.13052619222005157,M21=0.13052619222005157, M22=0.9914448613738104, sizingMethod='auto expand');
+                 zoom: 1;
+}
+.container {
+  width: 400px;
+  display: grid;
+  /* grid-columns: repeat(3,1fr); */
+  grid-gap: 5px;
+
+  margin:5px;
+}
+.filters.options {
+  /* transition: .5s ease-in-out */
+  border: 1px solid black;
+  border-bottom: 0;
+  width: 200px;
+}
+.filters.options div {
+  padding: 5px;
+  border-bottom: 1px solid black;
+  background-color: rgb(236, 161, 61);
+}
+.filters.options div:hover {
+  background-color: rgb(232, 162, 204);
+}
+.content {
+display: flex;
+flex-direction: row;
+}
+.tool {
+  width: 200px;
+  padding: 10px;
+  border: 1px solid black;
+}
+.inputs {
+  min-height:200px;
+  max-height:500px;
+  overflow-y: auto;
+  word-wrap: normal;
+  border: 1px solid black;
+}
+.hightlight {
+  background-color: yellow;
+}

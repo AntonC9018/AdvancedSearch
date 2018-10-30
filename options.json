@@ -1,0 +1,12 @@
+{
+  "data":[
+    {
+      "title": "Search for a word",
+      "class": "search"
+    },
+    {
+      "title": "Regex pattern",
+      "class": "regex"
+    }
+  ]
+}
